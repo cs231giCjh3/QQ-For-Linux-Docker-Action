@@ -1,0 +1,57 @@
+name: 构建原板镜像
+
+on:
+  # 手动触发工作流
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag for the release (e.g., v1.0.0)'
+        required: true
+        default: 'Original-v1.0.0'
+      docker_image_name:
+        description: 'Original Docker image'
+        required: true
+        default: 'qq-for-linux:latest-original'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 步骤 1: 获取代码
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 步骤 2: 设置 Docker 环境
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # 步骤 3: 下载文件并构建 Docker 镜像
+      - name: Build Docker image
+        run: |
+         mkdir original/ysabeauinfant/ && mkdir original/lxgw-wenkai-screen/
+         cp ./font-conf/ysabeauinfant/* ./original/ysabeauinfant/
+         cp ./font-conf/lxgw-wenkai-screen/* ./original/lxgw-wenkai-screen/
+         cp ./font-conf/local.conf ./original/
+         cd original/
+         
+          # 下载 QQ 安装包
+          curl -L -o qq.deb \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36" \
+            "https://dldir1.qq.com/qqfile/qq/QQNT/Linux/QQ_3.2.15_241210_amd64_01.deb"
+          
+          # 构建 Docker 镜像
+          docker build -t "${{ github.event.inputs.docker_image_name }}" .
+
+      # 步骤 4: 将 Docker 镜像保存并压缩为 tar.gz 文件
+      - name: Save and compress Docker image
+        run: |
+          docker save "${{ github.event.inputs.docker_image_name }}" -o qq-image-original.tar
+          gzip -1 qq-image-original.tar  # 压缩文件
+      # 步骤 5: 创建发布并上传压缩的 tar.gz 文件到 GitHub Releases
+      - name: Upload Docker image to GitHub Releases
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.event.inputs.tag_name }}
+          artifacts: qq-image-original.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
