@@ -38,7 +38,7 @@ jobs:
           # 下载 QQ 安装包
           curl -L -o qq.deb \
             -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36" \
-            "https://dldir1.qq.com/qqfile/qq/QQNT/Linux/QQ_3.2.15_241210_amd64_01.deb"
+            "https://dldir1.qq.com/qqfile/qq/QQNT/Linux/QQ_3.2.15_241224_amd64_01.deb"
           
           # 构建 Docker 镜像
           docker build -t "${{ github.event.inputs.docker_image_name }}" .
